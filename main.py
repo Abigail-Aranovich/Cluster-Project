@@ -4,7 +4,10 @@ from odf.table import Table, TableRow, TableCell
 import pandas as pd
 import numpy as np
 def isCellNa(series):
-    return pd.isna(series[0])
+    return series[0] == 0
+
+# def assignDefualtSpotCompositionValues():
+
 
 def isFileValid(file_path):
     if os.path.exists(file_path):
@@ -40,8 +43,17 @@ def getTablesFromWord(file_path):
 def getSpotCompositionData(spot_word_table):
     cluster_composition_columns = [ 'Ca2+', 'P3-', 'Zn2+', 'Mg2+', 'Ca&P',
                        'Non-Cap(only Calcium)', 'Zn', 'Ca:Mg =1']
+ # initialize compound values
+    # Split columns
+    numeric_cols = cluster_composition_columns[:4]
+    text_cols = cluster_composition_columns[4:]
 
-    spot_comp = pd.DataFrame(columns=cluster_composition_columns)
+    # Create row values
+    row_values = [0] * len(numeric_cols) + ['No'] * len(text_cols)
+
+    # Create DataFrame
+    spot_comp = pd.DataFrame([row_values], columns=cluster_composition_columns)
+
     for row_index, row in enumerate(spot_word_table.getElementsByType(TableRow)[1:]):
         element_weight = float(str(row.getElementsByType(TableCell)[4]))
         if element_weight > 0.4:
@@ -73,13 +85,15 @@ def getSpotCompositionData(spot_word_table):
         if not isCellNa(spot_comp['Ca2+']):
           spot_comp['Non-Cap(only Calcium)'] = ['Yes']
 
+    if not spot_comp['Mg2+'].iloc[0] == 0:
+        cal_to_mg_ratio = spot_comp['Ca2+'].iloc[0] / spot_comp['Mg2+'].iloc[0]
 
-    cal_to_mg_ratio = spot_comp['Ca2+'].iloc[0] / spot_comp['Mg2+'].iloc[0]
-
-    if 1.1 >= cal_to_mg_ratio >= 0.9:
-        spot_comp['Ca:Mg =1'] = ['Yes'] # idea - add a threshold for the app
+        if 1.1 >= cal_to_mg_ratio >= 0.9:
+            spot_comp['Ca:Mg =1'] = ['Yes'] # idea - add a threshold for the app
+        else:
+            spot_comp['Ca:Mg =1'] = ['No']
     else:
-        spot_comp['Ca:Mg =1'] = ['No']
+            spot_comp['Ca:Mg =1'] = ['No']
 
     return spot_comp
 
@@ -95,7 +109,6 @@ def getAnalysedClusterData(file_path):
         analysed_cluster_table = getSpotCompositionData(spot_table)
         result_series = analysed_cluster_table.iloc[0]
         analysed_cluster_data.append(result_series)
-
         print(result_series)
 
     return pd.DataFrame(analysed_cluster_data)
