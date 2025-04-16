@@ -90,11 +90,15 @@ def getAnalysedClusterData(file_path):
 
     spot_tables = getTablesFromWord(file_path)
     analysed_cluster_data = []
-    for spot_table_index, spot_table in enumerate(spot_tables):# gets last three tables
+    for spot_table_index, spot_table in enumerate(spot_tables[:]):# gets last three tables
         print("Table:", spot_table_index + 1)
-        # analysed_cluster_data.append(table)
-        print(getSpotCompositionData(spot_table))
-    return analysed_cluster_data
+        analysed_cluster_table = getSpotCompositionData(spot_table)
+        result_series = analysed_cluster_table.iloc[0]
+        analysed_cluster_data.append(result_series)
+
+        print(result_series)
+
+    return pd.DataFrame(analysed_cluster_data)
 
 
 def getClusterData(file_path = 'Word Uneditted/sample 11.odt'):
@@ -105,6 +109,8 @@ def getClusterData(file_path = 'Word Uneditted/sample 11.odt'):
     else:
         return cluster_data
 
-#spot and new image identification
-getClusterData()
+def createClusterExcel():
+    getClusterData().to_excel('output.xlsx', index=False)
 
+
+createClusterExcel()
