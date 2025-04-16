@@ -3,8 +3,8 @@ from odf.opendocument import load
 from odf.table import Table, TableRow, TableCell
 import pandas as pd
 import numpy as np
-def isCellNa(series):
-    return series[0] == 0
+def isInThreshold(series,num=0.4):
+    return float(series[0]) > num
 
 # def assignDefualtSpotCompositionValues():
 
@@ -56,44 +56,34 @@ def getSpotCompositionData(spot_word_table):
 
     for row_index, row in enumerate(spot_word_table.getElementsByType(TableRow)[1:]):
         element_weight = float(str(row.getElementsByType(TableCell)[4]))
-        if element_weight > 0.4:
-            element_num = int(str(row.getElementsByType(TableCell)[1]))
-            if element_num == 20:
-                spot_comp['Ca2+'] = [element_weight]## need to check how to input NO
-            if element_num == 15:
-                spot_comp['P3-'] = [element_weight]
-            if element_num == 30:
-                spot_comp['Zn2+'] = [element_weight]
-            if element_num == 11:
-                spot_comp['Mg2+'] = [element_weight]
 
-    if not isCellNa(spot_comp['Zn2+']):
+        element_num = int(str(row.getElementsByType(TableCell)[1]))
+        if element_num == 20:
+            spot_comp['Ca2+'] = [element_weight]## need to check how to input NO
+        if element_num == 15:
+            spot_comp['P3-'] = [element_weight]
+        if element_num == 30:
+            spot_comp['Zn2+'] = [element_weight]
+        if element_num == 11:
+            spot_comp['Mg2+'] = [element_weight]
+
+    if isInThreshold(spot_comp['Zn2+']):
         spot_comp['Zn'] = ['Yes']
-    else:
-        spot_comp['Zn'] = ['No']
 
-    if not isCellNa(spot_comp['P3-']):
+    if  isInThreshold(spot_comp['P3-']):
 
-        if not isCellNa(spot_comp['Ca2+']):
+        if isInThreshold(spot_comp['Ca2+']):
             spot_comp['Ca&P'] = ['Yes']
-            spot_comp['Non-Cap(only Calcium)'] = ['No']
-        else:
-            spot_comp['Ca&P'] = ['No']
-            spot_comp['Non-Cap(only Calcium)'] = ['No']
     else:
-        spot_comp['Ca&P'] = ['No']
-        if not isCellNa(spot_comp['Ca2+']):
+        if isInThreshold(spot_comp['Ca2+']):
           spot_comp['Non-Cap(only Calcium)'] = ['Yes']
 
-    if not spot_comp['Mg2+'].iloc[0] == 0:
-        cal_to_mg_ratio = spot_comp['Ca2+'].iloc[0] / spot_comp['Mg2+'].iloc[0]
+          if isInThreshold(spot_comp['Mg2+']):
+            cal_to_mg_ratio = spot_comp['Ca2+'].iloc[0] / spot_comp['Mg2+'].iloc[0]
 
-        if 1.1 >= cal_to_mg_ratio >= 0.9:
-            spot_comp['Ca:Mg =1'] = ['Yes'] # idea - add a threshold for the app
-        else:
-            spot_comp['Ca:Mg =1'] = ['No']
-    else:
-            spot_comp['Ca:Mg =1'] = ['No']
+            if 1.1 >= cal_to_mg_ratio >= 0.9:
+                spot_comp['Ca:Mg =1'] = ['Yes'] # idea - add a threshold for the app
+
 
     return spot_comp
 
