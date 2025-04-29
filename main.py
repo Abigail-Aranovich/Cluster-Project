@@ -112,8 +112,27 @@ def getClusterData(file_path = 'Word Uneditted/sample 11.odt'):
     else:
         return cluster_data
 
+def isExcelFileOpen(file_path):
+    try:
+        # Attempt to open the file for reading and writing without truncating
+        with open(file_path, 'r+b'):
+            print("File is not open in Excel.")
+    except PermissionError:
+        raise Exception("The Excel file is currently open. Please close it and try again.")
+    except FileNotFoundError:
+        raise Exception("The file does not exist.")
+    except Exception as e:
+        raise Exception(f"An unexpected error occurred: {e}")
+
+
+
 def createClusterExcel():
-    getClusterData().to_excel('output.xlsx', index=False)
+    file_path = 'output.xlsx'
+    try:
+        isExcelFileOpen(file_path)
+        getClusterData().to_excel(file_path, index=False)
+    except:
+        print("File Is open - please close!!!")
 
 
 createClusterExcel()
