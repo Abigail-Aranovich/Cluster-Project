@@ -131,8 +131,9 @@ def createClusterExcel():
     try:
         isExcelFileOpen(file_path)
         getClusterData().to_excel(file_path, index=False)
-    except:
-        print("File Is open - please close!!!")
+    except Exception as e:
+        print(f"Caught an error: {e}")
+
 
 
 createClusterExcel()
