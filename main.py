@@ -1,7 +1,12 @@
 import os
 from odf.opendocument import load
 from odf.table import Table, TableRow, TableCell
+from odf.text import P, Span
+from odf.style import Style, TextProperties
 import pandas as pd
+import re
+
+
 import numpy as np
 def isInThreshold(series,num=0.4):
     return float(series[0]) > num
@@ -64,7 +69,7 @@ def getSpotCompositionData(spot_word_table):
             spot_comp['P3-'] = [element_weight]
         if element_num == 30:
             spot_comp['Zn2+'] = [element_weight]
-        if element_num == 11:
+        if element_num == 12:
             spot_comp['Mg2+'] = [element_weight]
 
     if isInThreshold(spot_comp['Zn2+']):
@@ -87,8 +92,23 @@ def getSpotCompositionData(spot_word_table):
 
     return spot_comp
 
-def getSpotIdentification():
-    return
+def getText(file_path):
+    doc = load(file_path)
+    all_text = []
+
+    # Loop through all paragraphs and spans to extract the text
+    for paragraph in doc.getElementsByType(P):
+        for span in paragraph.getElementsByType(Span):
+            if span.firstChild:  # Ensure the span has text content
+                all_text.append(span.firstChild.data)
+
+    return "\n".join(all_text)
+
+def getSpotNumbers():
+    numbers = re.findall(r'(\d+)\.\s*Spot', getText('Word Uneditted/sample 11.odt'))  # \d+ matches one or more digits
+    print(numbers)
+    return numbers
+
 
 def getAnalysedClusterData(file_path):
 
@@ -100,7 +120,6 @@ def getAnalysedClusterData(file_path):
         result_series = analysed_cluster_table.iloc[0]
         analysed_cluster_data.append(result_series)
         print(result_series)
-
     return pd.DataFrame(analysed_cluster_data)
 
 
@@ -114,7 +133,6 @@ def getClusterData(file_path = 'Word Uneditted/sample 11.odt'):
 
 def isExcelFileOpen(file_path):
     try:
-        # Attempt to open the file for reading and writing without truncating
         with open(file_path, 'r+b'):
             print("File is not open in Excel.")
     except PermissionError:
@@ -124,16 +142,13 @@ def isExcelFileOpen(file_path):
     except Exception as e:
         raise Exception(f"An unexpected error occurred: {e}")
 
-
-
 def createClusterExcel():
     file_path = 'output.xlsx'
     try:
         isExcelFileOpen(file_path)
         getClusterData().to_excel(file_path, index=False)
+        print("Success :)")
     except Exception as e:
         print(f"Caught an error: {e}")
-
-
 
 createClusterExcel()
